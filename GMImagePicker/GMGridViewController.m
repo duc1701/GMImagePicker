@@ -135,12 +135,24 @@ NSString * const GMGridViewCellIdentifier = @"GMGridViewCellIdentifier";
     
     [self setupButtons];
     [self setupToolbar];
+    
+    CGSize contentSize = [self.collectionView.collectionViewLayout collectionViewContentSize];
+    if (contentSize.height > self.collectionView.bounds.size.height) {
+        CGPoint targetContentOffset =
+        CGPointMake(0.0f, contentSize.height);
+        [self.collectionView setContentOffset:targetContentOffset];
+    }
 }
 
 - (void)viewDidAppear:(BOOL)animated
 {
     [super viewDidAppear:animated];
     [self updateCachedAssets];
+}
+
+- (void)viewWillDisappear:(BOOL)animate
+{
+    [self.navigationController setToolbarHidden:YES animated:YES];
 }
 
 - (void)dealloc

@@ -123,14 +123,15 @@ static NSString * const CollectionCellReuseIdentifier = @"CollectionCell";
     //Fetch PHAssetCollections:
     PHFetchResult *topLevelUserCollections = [self.collectionsFetchResults objectAtIndex:0];
     PHFetchResult *smartAlbums = [self.collectionsFetchResults objectAtIndex:1];
-    
+
+    PHFetchOptions *options = [[PHFetchOptions alloc] init];
+    options.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"creationDate" ascending:YES]];
+    options.predicate = [NSPredicate predicateWithFormat:@"mediaType == %d", PHAssetMediaTypeImage];
+
     //All album: Sorted by descending creation date.
     NSMutableArray *allFetchResultArray = [[NSMutableArray alloc] init];
     NSMutableArray *allFetchResultLabel = [[NSMutableArray alloc] init];
     {
-        PHFetchOptions *options = [[PHFetchOptions alloc] init];
-        options.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"creationDate" ascending:NO]];
-        //options.predicate = predicatePHAsset;
         PHFetchResult *assetsFetchResult = [PHAsset fetchAssetsWithOptions:options];
         [allFetchResultArray addObject:assetsFetchResult];
         [allFetchResultLabel addObject:NSLocalizedStringFromTable(@"picker.table.all-photos-label", @"GMImagePicker",@"All photos")];
@@ -143,13 +144,11 @@ static NSString * const CollectionCellReuseIdentifier = @"CollectionCell";
     {
         if ([collection isKindOfClass:[PHAssetCollection class]])
         {
-            //PHFetchOptions *options = [[PHFetchOptions alloc] init];
-            //options.predicate = predicatePHAsset;
             PHAssetCollection *assetCollection = (PHAssetCollection *)collection;
             
             //Albums collections are allways PHAssetCollectionType=1 & PHAssetCollectionSubtype=2
             
-            PHFetchResult *assetsFetchResult = [PHAsset fetchAssetsInAssetCollection:assetCollection options:nil];
+            PHFetchResult *assetsFetchResult = [PHAsset fetchAssetsInAssetCollection:assetCollection options:options];
             [userFetchResultArray addObject:assetsFetchResult];
             [userFetchResultLabel addObject:collection.localizedTitle];
         }
@@ -168,9 +167,6 @@ static NSString * const CollectionCellReuseIdentifier = @"CollectionCell";
             //Smart collections are PHAssetCollectionType=2;
             if(self.picker.customSmartCollections && [self.picker.customSmartCollections containsObject:@(assetCollection.assetCollectionSubtype)])
             {
-                PHFetchOptions *options = [[PHFetchOptions alloc] init];
-                options.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"creationDate" ascending:NO]];
-                //options.predicate = predicatePHAsset;
                 PHFetchResult *assetsFetchResult = [PHAsset fetchAssetsInAssetCollection:assetCollection options:options];
                 if(assetsFetchResult.count>0)
                 {
@@ -250,7 +246,7 @@ static NSString * const CollectionCellReuseIdentifier = @"CollectionCell";
         
         //Compute the thumbnail pixel size:
         CGSize tableCellThumbnailSize1 = CGSizeMake(kAlbumThumbnailSize1.width*scale, kAlbumThumbnailSize1.height*scale);
-        PHAsset *asset = assetsFetchResult[0];
+        PHAsset *asset = assetsFetchResult[[assetsFetchResult count] - 1];
         [cell setVideoLayout:(asset.mediaType==PHAssetMediaTypeVideo)];
         [self.imageManager requestImageForAsset:asset
                                      targetSize:tableCellThumbnailSize1
@@ -270,7 +266,7 @@ static NSString * const CollectionCellReuseIdentifier = @"CollectionCell";
         {
             //Compute the thumbnail pixel size:
             CGSize tableCellThumbnailSize2 = CGSizeMake(kAlbumThumbnailSize2.width*scale, kAlbumThumbnailSize2.height*scale);
-            PHAsset *asset = assetsFetchResult[1];
+            PHAsset *asset = assetsFetchResult[[assetsFetchResult count] - 2];
             [self.imageManager requestImageForAsset:asset
                                          targetSize:tableCellThumbnailSize2
                                         contentMode:PHImageContentModeAspectFill
@@ -290,7 +286,7 @@ static NSString * const CollectionCellReuseIdentifier = @"CollectionCell";
         if([assetsFetchResult count]>2)
         {
             CGSize tableCellThumbnailSize3 = CGSizeMake(kAlbumThumbnailSize3.width*scale, kAlbumThumbnailSize3.height*scale);
-            PHAsset *asset = assetsFetchResult[2];
+            PHAsset *asset = assetsFetchResult[[assetsFetchResult count] - 3];
             [self.imageManager requestImageForAsset:asset
                                          targetSize:tableCellThumbnailSize3
                                         contentMode:PHImageContentModeAspectFill
@@ -334,6 +330,9 @@ static NSString * const CollectionCellReuseIdentifier = @"CollectionCell";
     
     //Push GMGridViewController
     [self.navigationController pushViewController:gridViewController animated:YES];
+
+    //Show toolbar when moving to grid view
+    [self.navigationController setToolbarHidden:NO animated:YES];
 }
 
 #pragma mark  Header

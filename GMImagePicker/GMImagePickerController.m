@@ -116,7 +116,6 @@
     for (UIViewController *viewController in nav.viewControllers)
     {
         [[viewController.toolbarItems objectAtIndex:1] setTitle:[self toolbarTitle]];
-        [viewController.navigationController setToolbarHidden:(self.selectedAssets.count == 0) animated:YES];
     }
 }
 
